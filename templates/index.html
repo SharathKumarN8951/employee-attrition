@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Attrition Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>Employee Attrition Prediction</h1>
+
+    <form action="/predict" method="POST">
+        <input type="number" name="age" placeholder="Age" required>
+        <input type="number" name="monthly_income" placeholder="Monthly Income" required>
+        <input type="number" name="distance" placeholder="Distance From Home" required>
+        <input type="number" name="total_years" placeholder="Total Working Years" required>
+        <input type="number" name="years_company" placeholder="Years at Company" required>
+
+        <select name="gender" required>
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+
+        <select name="overtime" required>
+            <option value="">Over Time?</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+        </select>
+
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if prediction %}
+        <div class="result">{{ prediction }}</div>
+    {% endif %}
+</div>
+
+</body>
+</html>
