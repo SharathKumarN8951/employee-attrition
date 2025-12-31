@@ -9,24 +9,63 @@
 
 <div class="container">
     <h1>Employee Attrition Prediction</h1>
+    <p class="subtitle">Fill the employee details and click Predict</p>
 
     <form action="/predict" method="POST">
-        <input type="number" name="age" placeholder="Age" required>
-        <input type="number" name="monthly_income" placeholder="Monthly Income" required>
-        <input type="number" name="distance" placeholder="Distance From Home" required>
-        <input type="number" name="total_years" placeholder="Total Working Years" required>
-        <input type="number" name="years_company" placeholder="Years at Company" required>
 
-        <select name="gender" required>
-            <option value="">Select Gender</option>
+        <label>Age</label>
+        <input type="number" name="Age" value="30" required>
+
+        <label>Daily Rate</label>
+        <input type="number" name="DailyRate" value="800" required>
+
+        <label>Distance From Home</label>
+        <input type="number" name="DistanceFromHome" value="10" required>
+
+        <label>Education Level (1–5)</label>
+        <select name="Education" required>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select>
+
+        <label>Job Level</label>
+        <select name="JobLevel" required>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select>
+
+        <label>Monthly Income</label>
+        <input type="number" name="MonthlyIncome" value="5000" required>
+
+        <label>Total Working Years</label>
+        <input type="number" name="TotalWorkingYears" value="5" required>
+
+        <label>Years at Company</label>
+        <input type="number" name="YearsAtCompany" value="3" required>
+
+        <label>Gender</label>
+        <select name="Gender" required>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
         </select>
 
-        <select name="overtime" required>
-            <option value="">Over Time?</option>
+        <label>Over Time</label>
+        <select name="OverTime" required>
             <option value="Yes">Yes</option>
             <option value="No">No</option>
+        </select>
+
+        <label>Department</label>
+        <select name="Department" required>
+            <option value="Sales">Sales</option>
+            <option value="Research & Development">Research & Development</option>
+            <option value="Human Resources">Human Resources</option>
         </select>
 
         <button type="submit">Predict</button>
@@ -39,3 +78,4 @@
 
 </body>
 </html>
+
