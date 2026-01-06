@@ -2,21 +2,24 @@ import streamlit as st
 import joblib
 import pandas as pd
 
-# -----------------------------
-# Load model and feature columns
-# -----------------------------
-model = joblib.load("random_forest_model.pkl")
-feature_columns = joblib.load("feature_columns.pkl")
-
 st.set_page_config(page_title="Employee Attrition Prediction", layout="centered")
+
+@st.cache_resource
+def load_model():
+    return joblib.load("random_forest_model.pkl")
+
+@st.cache_resource
+def load_features():
+    return joblib.load("feature_columns.pkl")
+
+model = load_model()
+feature_columns = load_features()
 
 st.title("Employee Attrition Prediction")
 st.write("Fill the employee details and click **Predict**")
 
-# -----------------------------
-# USER INPUTS (IMPORTANT ONES)
-# -----------------------------
-age = st.number_input("Age", min_value=18, max_value=65, value=30)
+# Inputs
+age = st.number_input("Age", 18, 65, 30)
 daily_rate = st.number_input("Daily Rate", value=800)
 distance = st.number_input("Distance From Home", value=10)
 education = st.selectbox("Education Level (1–5)", [1, 2, 3, 4, 5])
@@ -32,22 +35,20 @@ department = st.selectbox(
     ["Sales", "Research & Development", "Human Resources"]
 )
 
-# -----------------------------
-# CREATE INPUT DICTIONARY
-# -----------------------------
+# Create input
 input_data = {col: 0 for col in feature_columns}
 
-# Numeric features
-input_data["Age"] = age
-input_data["DailyRate"] = daily_rate
-input_data["DistanceFromHome"] = distance
-input_data["Education"] = education
-input_data["JobLevel"] = job_level
-input_data["MonthlyIncome"] = monthly_income
-input_data["TotalWorkingYears"] = total_years
-input_data["YearsAtCompany"] = years_company
+input_data.update({
+    "Age": age,
+    "DailyRate": daily_rate,
+    "DistanceFromHome": distance,
+    "Education": education,
+    "JobLevel": job_level,
+    "MonthlyIncome": monthly_income,
+    "TotalWorkingYears": total_years,
+    "YearsAtCompany": years_company
+})
 
-# One-hot encoding (manual)
 if gender == "Male":
     input_data["Gender_Male"] = 1
 
@@ -61,12 +62,9 @@ elif department == "Research & Development":
 elif department == "Human Resources":
     input_data["Department_Human Resources"] = 1
 
-# Convert to DataFrame
 input_df = pd.DataFrame([input_data])
+input_df = input_df[feature_columns]   # 🔒 SAFETY LINE
 
-# -----------------------------
-# PREDICTION
-# -----------------------------
 if st.button("Predict"):
     prediction = model.predict(input_df)[0]
 
