@@ -15,7 +15,7 @@ st.set_page_config(
 # -----------------------------------
 @st.cache_resource
 def load_model():
-    return joblib.load("random_forest_modell.pkl")  # ✅ fixed name
+    return joblib.load("random_forest_model.pkl")  # ✅ fixed filename
 
 @st.cache_resource
 def load_features():
@@ -30,12 +30,16 @@ except Exception as e:
     st.stop()
 
 # -----------------------------------
-# Helper for one-hot encoding (SAFE)
+# Robust one-hot encoder (IMPORTANT)
 # -----------------------------------
-def set_one_hot(input_data, prefix, value):
-    key = f"{prefix}_{value}".replace(" & ", "_").replace(" ", "_").lower()
+def auto_one_hot(input_data, prefix, value):
+    """
+    Automatically match UI value to one-hot encoded feature
+    """
+    value_key = value.lower().replace(" ", "").replace("&", "")
     for col in feature_columns:
-        if col.lower() == key:
+        col_key = col.lower().replace(" ", "").replace("&", "")
+        if col_key == f"{prefix.lower()}{value_key}":
             input_data[col] = 1
 
 # -----------------------------------
@@ -45,9 +49,8 @@ st.title("Employee Attrition Prediction")
 st.write("Fill employee details and click **Predict**")
 
 # -----------------------------------
-# User Inputs (GROUPED & SIMPLE)
+# User Inputs
 # -----------------------------------
-
 with st.expander("👤 Personal Information", expanded=True):
     age = st.number_input("Age", 18, 65, 30)
     gender = st.selectbox("Gender", ["Male", "Female"])
@@ -69,7 +72,7 @@ with st.expander("💰 Compensation & Experience"):
     years_company = st.number_input("Years at Company", 0, 40, 3)
 
 # -----------------------------------
-# Prepare input dictionary (IMPORTANT)
+# Prepare input dictionary
 # -----------------------------------
 input_data = {col: 0 for col in feature_columns}
 
@@ -85,36 +88,36 @@ input_data.update({
     "YearsAtCompany": years_company
 })
 
-# Binary features
-if overtime == "Yes":
-    set_one_hot(input_data, "OverTime", "Yes")
-
-# One-hot categorical
-set_one_hot(input_data, "Gender", gender)
-set_one_hot(input_data, "Department", department)
+# Binary / categorical
+auto_one_hot(input_data, "Gender", gender)
+auto_one_hot(input_data, "Department", department)
+auto_one_hot(input_data, "OverTime", overtime)
 
 # -----------------------------------
-# Create DataFrame (CLOUD SAFE)
+# Create DataFrame (SAFE)
 # -----------------------------------
 input_df = pd.DataFrame([input_data])
 input_df = input_df.reindex(columns=feature_columns, fill_value=0)
 
 # -----------------------------------
-# Prediction
+# Prediction (IMPROVED LOGIC)
 # -----------------------------------
 if st.button("Predict"):
     try:
         proba = model.predict_proba(input_df)[0][1]
 
-        # 🔥 threshold tuning for imbalance
-        prediction = 1 if proba >= 0.4 else 0
-
-        if prediction == 1:
-            st.error("❌ Employee is likely to **LEAVE** the company")
-        else:
+        # ✅ Risk-based interpretation (BEST PRACTICE)
+        if proba < 0.40:
             st.success("✅ Employee is likely to **STAY** in the company")
+            st.info("🟢 Risk Level: LOW")
+        elif proba < 0.60:
+            st.warning("⚠️ Employee has a **MEDIUM RISK** of leaving the company")
+            st.info("🟡 Risk Level: MEDIUM")
+        else:
+            st.error("❌ Employee is likely to **LEAVE** the company")
+            st.info("🔴 Risk Level: HIGH")
 
-        st.info(f"📊 Attrition Probability: **{proba * 100:.2f}%**")
+        st.write(f"📊 **Attrition Probability:** `{proba * 100:.2f}%`")
 
     except Exception as e:
         st.error("❌ Prediction failed")
