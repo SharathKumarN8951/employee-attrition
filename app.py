@@ -2,8 +2,17 @@ import streamlit as st
 import joblib
 import pandas as pd
 
-st.set_page_config(page_title="Employee Attrition Prediction", layout="centered")
+# -----------------------------------
+# Page config
+# -----------------------------------
+st.set_page_config(
+    page_title="Employee Attrition Prediction",
+    layout="centered"
+)
 
+# -----------------------------------
+# Load model & features safely
+# -----------------------------------
 @st.cache_resource
 def load_model():
     return joblib.load("random_forest_model.pkl")
@@ -12,14 +21,24 @@ def load_model():
 def load_features():
     return joblib.load("feature_columns.pkl")
 
-model = load_model()
-feature_columns = load_features()
+try:
+    model = load_model()
+    feature_columns = load_features()
+except Exception as e:
+    st.error("❌ Failed to load model or feature columns")
+    st.exception(e)
+    st.stop()
 
+# -----------------------------------
+# UI
+# -----------------------------------
 st.title("Employee Attrition Prediction")
 st.write("Fill the employee details and click **Predict**")
 
-# Inputs
-age = st.number_input("Age", 18, 65, 30)
+# -----------------------------------
+# User Inputs
+# -----------------------------------
+age = st.number_input("Age", min_value=18, max_value=65, value=30)
 daily_rate = st.number_input("Daily Rate", value=800)
 distance = st.number_input("Distance From Home", value=10)
 education = st.selectbox("Education Level (1–5)", [1, 2, 3, 4, 5])
@@ -35,9 +54,12 @@ department = st.selectbox(
     ["Sales", "Research & Development", "Human Resources"]
 )
 
-# Create input
+# -----------------------------------
+# Prepare input dictionary
+# -----------------------------------
 input_data = {col: 0 for col in feature_columns}
 
+# Numeric features
 input_data.update({
     "Age": age,
     "DailyRate": daily_rate,
@@ -49,26 +71,45 @@ input_data.update({
     "YearsAtCompany": years_company
 })
 
+# Gender
 if gender == "Male":
-    input_data["Gender_Male"] = 1
+    for col in feature_columns:
+        if col.lower() == "gender_male":
+            input_data[col] = 1
 
+# OverTime
 if overtime == "Yes":
-    input_data["OverTime_Yes"] = 1
+    for col in feature_columns:
+        if col.lower() == "overtime_yes":
+            input_data[col] = 1
 
-if department == "Sales":
-    input_data["Department_Sales"] = 1
-elif department == "Research & Development":
-    input_data["Department_Research & Development"] = 1
-elif department == "Human Resources":
-    input_data["Department_Human Resources"] = 1
+# Department (AUTO-MATCH SAFE)
+dept_key = department.replace(" & ", "_").replace(" ", "_").lower()
+for col in feature_columns:
+    if col.lower().startswith("department_") and dept_key in col.lower():
+        input_data[col] = 1
 
+# -----------------------------------
+# Create DataFrame (CLOUD SAFE)
+# -----------------------------------
 input_df = pd.DataFrame([input_data])
-input_df = input_df[feature_columns]   # 🔒 SAFETY LINE
+input_df = input_df.reindex(columns=feature_columns, fill_value=0)
 
+# -----------------------------------
+# Prediction
+# -----------------------------------
 if st.button("Predict"):
-    prediction = model.predict(input_df)[0]
+    try:
+        prediction = model.predict(input_df)[0]
+        probability = model.predict_proba(input_df)[0][1]
 
-    if prediction == 1:
-        st.error("❌ Employee is likely to LEAVE the company")
-    else:
-        st.success("✅ Employee is likely to STAY in the company")
+        if prediction == 1:
+            st.error("❌ Employee is likely to **LEAVE** the company")
+        else:
+            st.success("✅ Employee is likely to **STAY** in the company")
+
+        st.info(f"📊 Attrition Probability: **{probability * 100:.2f}%**")
+
+    except Exception as e:
+        st.error("❌ Prediction failed")
+        st.exception(e)
