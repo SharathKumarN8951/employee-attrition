@@ -15,7 +15,7 @@ st.set_page_config(
 # -----------------------------------
 @st.cache_resource
 def load_model():
-    return joblib.load("random_forest_model.pkl")  # ✅ fixed filename
+    return joblib.load("random_forest_modell.pkl")  # ✅ fixed filename
 
 @st.cache_resource
 def load_features():
@@ -122,3 +122,4 @@ if st.button("Predict"):
     except Exception as e:
         st.error("❌ Prediction failed")
         st.exception(e)
+
